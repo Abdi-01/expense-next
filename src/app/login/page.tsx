@@ -24,6 +24,7 @@ const LoginPage: React.FunctionComponent<ILoginPageProps> = (props) => {
       });
 
       toast(`Welcome ${login.data.result.email}`);
+      localStorage.setItem("auth", JSON.stringify(login.data.result));
       setUser(login.data.result);
       router.push("/");
     } catch (error: any) {
