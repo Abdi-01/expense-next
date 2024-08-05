@@ -1,113 +1,262 @@
+"use client";
+import { UserContext } from "@/context/UserContext";
+import { apiCall } from "@/helper/axiosInstance";
 import Image from "next/image";
+import { useEffect, useRef, useState, useContext } from "react";
+import { MdDelete } from "react-icons/md";
 
 export default function Home() {
+  const filterCategoryRef = useRef<HTMLSelectElement>(null);
+  const filterStartRef = useRef<HTMLInputElement>(null);
+  const filterEndtRef = useRef<HTMLInputElement>(null);
+
+  const titleRef = useRef<HTMLInputElement>(null);
+  const radioIncomeRef = useRef<HTMLInputElement>(null);
+  const radioExpenseRef = useRef<HTMLInputElement>(null);
+  const categoryRef = useRef<HTMLSelectElement>(null);
+  const nominalRef = useRef<HTMLInputElement>(null);
+
+  const [list, setList] = useState<any>([]);
+  const [category, setCategory] = useState<any>([]);
+  const [amount, setAmount] = useState<any>({
+    totalIncome: 0,
+    totalExpense: 0,
+  });
+  const getList = async (query: string = "") => {
+    try {
+      const { data } = await apiCall.get(`/tracker${query}`);
+      console.log(data);
+
+      setAmount({
+        totalIncome: data.totalIncome,
+        totalExpense: data.totalExpense,
+      });
+      setList(data.result);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const getCategory = async () => {
+    try {
+      const { data } = await apiCall.get(`/tracker/category`);
+
+      setCategory(data.result);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getList();
+    getCategory();
+  }, []);
+
+  const onSubmit = () => {
+    try {
+      console.log(
+        titleRef.current?.value,
+        nominalRef.current?.value,
+        categoryRef.current?.value
+      );
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const printList = () => {
+    return list.map((val: any) => {
+      return (
+        <div className="flex p-2 justify-between items-center">
+          <div>
+            <p className="text-lg">{val.title}</p>
+            <p className="text-slate-500">{val.category}</p>
+            <p className="text-slate-600">{val.date}</p>
+          </div>
+          <div className="flex items-center gap-4">
+            <p
+              className={`font-bold ${
+                val.type === "income" ? "text-teal-500" : "text-red-500"
+              }`}
+            >
+              {val.nominal.toLocaleString("id-ID", {
+                style: "currency",
+                currency: "IDR",
+              })}
+            </p>
+            <button className="bg-slate-200 p-2 rounded-md shadow">
+              <MdDelete />
+            </button>
+          </div>
+        </div>
+      );
+    });
+  };
+
+  const printCategory = () => {
+    return category.map((val: any) => {
+      return <option value={val}>{val}</option>;
+    });
+  };
+
+  const { user, setUser } = useContext(UserContext);
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">src/app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="bg-slate-50 h-screen flex items-center">
+      <div
+        id="container"
+        className="w-3/4 bg-slate-100 m-auto shadow-lg rounded-md flex p-8"
+      >
+        <div id="tracker-list" className="flex-1 p-8">
+          <h1 className="text-5xl">Hello {user?.email}, track your money</h1>
+          <div className="my-4 bg-slate-50 p-4 shadow-md rounded-md">
+            <h3 className="text-center text-2xl">Your Money Balance</h3>
+            <h3 className="text-center text-6xl font-bold">
+              {(amount.totalIncome - amount.totalExpense).toLocaleString(
+                "id-ID",
+                {
+                  style: "currency",
+                  currency: "IDR",
+                }
+              )}
+            </h3>
+            <div className="flex my-4">
+              <div className="flex-1">
+                <h3 className="text-center text-lg">Income</h3>
+                <h3 className="text-center text-xl font-bold">
+                  {amount.totalIncome.toLocaleString("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                  })}
+                </h3>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-center text-lg">Expense</h3>
+                <h3 className="text-center text-xl font-bold">
+                  -{" "}
+                  {amount.totalExpense.toLocaleString("id-ID", {
+                    style: "currency",
+                    currency: "IDR",
+                  })}
+                </h3>
+              </div>
+            </div>
+          </div>
+          <div id="filter" className="space-y-2">
+            <div className="flex gap-4 items-center">
+              <label className="block text-xl flex-1">Category</label>
+              <select
+                className="p-2 rounded-md shadow flex-1"
+                ref={filterCategoryRef}
+              >
+                <option value="">Choose</option>
+                {printCategory()}
+              </select>
+            </div>
+            <div className="flex gap-4">
+              <div className="flex-1 flex gap-4 items-center">
+                <label className="block text-xl flex-1">Start Date</label>
+                <input
+                  className="p-2 rounded-md shadow flex-1"
+                  type="date"
+                  ref={filterStartRef}
+                />
+              </div>
+              <div className="flex-1 flex gap-4 items-center">
+                <label className="block text-xl flex-1">End Date</label>
+                <input
+                  className="p-2 rounded-md shadow flex-1"
+                  type="date"
+                  ref={filterEndtRef}
+                />
+              </div>
+            </div>
+            <button
+              className="w-full p-2 bg-slate-500 rounded-md shadow"
+              onClick={() => {
+                console.log(filterCategoryRef.current?.value);
+                getList(
+                  `?category=${filterCategoryRef.current?.value}&&startDate=${filterStartRef.current?.value}&&endDate=${filterEndtRef.current?.value}`
+                );
+              }}
+            >
+              Search
+            </button>
+          </div>
+          <div
+            id="list-data"
+            className="my-4 h-64 overflow-scroll bg-slate-50 p-4 shadow-md rounded-md"
           >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+            {printList()}
+          </div>
+        </div>
+        <div
+          id="tracker-form"
+          className="flex-1 p-8 bg-slate-50 rounded-md shadow-md"
+        >
+          <div className="flex items-center h-full">
+            <div className="w-full space-y-4">
+              <div className="flex gap-4 items-center">
+                <label className="block text-xl flex-1">Type</label>
+                <div className="flex-1 flex justify-evenly">
+                  <div>
+                    <input
+                      name="expense-type"
+                      className="rounded-md shadow flex-1 mr-2"
+                      value="income"
+                      type="radio"
+                      ref={radioIncomeRef}
+                    />
+                    <label>Income</label>
+                  </div>
+                  <div>
+                    <input
+                      name="expense-type"
+                      className="rounded-md shadow flex-1 mr-2"
+                      value="expense"
+                      type="radio"
+                      ref={radioExpenseRef}
+                    />
+                    <label>Expense</label>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-4 items-center">
+                <label className="block text-xl flex-1">Title</label>
+                <input
+                  className="p-2 rounded-md shadow flex-1"
+                  type="text"
+                  ref={titleRef}
+                />
+              </div>
+              <div className="flex gap-4 items-center">
+                <label className="block text-xl flex-1">Nominal</label>
+                <input
+                  className="p-2 rounded-md shadow flex-1"
+                  type="number"
+                  ref={nominalRef}
+                />
+              </div>
+              <div className="flex gap-4 items-center">
+                <label className="block text-xl flex-1">Category</label>
+                <select
+                  className="p-2 rounded-md shadow flex-1"
+                  ref={categoryRef}
+                >
+                  <option value="">Choose</option>
+                  {printCategory()}
+                </select>
+              </div>
+              <button
+                className="bg-slate-500 p-2 w-full rounded-md shadow"
+                onClick={onSubmit}
+              >
+                Submit
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </div>
   );
 }
