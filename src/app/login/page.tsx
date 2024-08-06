@@ -12,7 +12,8 @@ const LoginPage: React.FunctionComponent<ILoginPageProps> = (props) => {
   const router = useRouter();
   const emailRef = React.useRef<HTMLInputElement>(null);
   const passwordRef = React.useRef<HTMLInputElement>(null);
-  const { setUser } = React.useContext(UserContext);
+  const { user, setUser } = React.useContext(UserContext);
+  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
 
   const [isVisible, setIsVisible] = React.useState<boolean>(false);
 
@@ -22,8 +23,6 @@ const LoginPage: React.FunctionComponent<ILoginPageProps> = (props) => {
         email: emailRef.current?.value,
         password: passwordRef.current?.value,
       });
-
-      console.log(data);
 
       toast(`Welcome ${data.result.email}`);
       // Menyimpan token pada localstorage
@@ -37,6 +36,19 @@ const LoginPage: React.FunctionComponent<ILoginPageProps> = (props) => {
       toast(error.response.data.error.message);
     }
   };
+
+  React.useEffect(() => {
+    if (user?.email) {
+      router.replace("/");
+    }
+    setTimeout(() => {
+      setIsAuthenticated(true);
+    }, 1500);
+  }, [user, isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return <p className="text-center text-5xl my-8">LOADING</p>;
+  }
 
   return (
     <div className="bg-slate-50 h-screen flex items-center">

@@ -1,5 +1,7 @@
 "use client";
+import { UserContext } from "@/context/UserContext";
 import { apiCall } from "@/helper/axiosInstance";
+import { useRouter } from "next/navigation";
 import * as React from "react";
 import { MdVisibility, MdVisibilityOff } from "react-icons/md";
 import { toast } from "react-toastify";
@@ -7,9 +9,13 @@ import { toast } from "react-toastify";
 interface IRegisterPageProps {}
 
 const RegisterPage: React.FunctionComponent<IRegisterPageProps> = (props) => {
+  const router = useRouter();
   const emailRef = React.useRef<HTMLInputElement>(null);
   const passwordRef = React.useRef<HTMLInputElement>(null);
   const confirmPasswordRef = React.useRef<HTMLInputElement>(null);
+
+  const { user } = React.useContext(UserContext);
+  const [isAuthenticated, setIsAuthenticated] = React.useState<boolean>(false);
 
   const [isVisible, setIsVisible] = React.useState<boolean>(false);
 
@@ -26,6 +32,19 @@ const RegisterPage: React.FunctionComponent<IRegisterPageProps> = (props) => {
       console.log(error);
     }
   };
+
+  React.useEffect(() => {
+    if (user?.email) {
+      router.replace("/");
+    }
+    setTimeout(() => {
+      setIsAuthenticated(true);
+    }, 1500);
+  }, [user, isAuthenticated]);
+
+  if (!isAuthenticated) {
+    return <p className="text-center text-5xl my-8">LOADING</p>;
+  }
 
   return (
     <div className="bg-slate-50 h-screen flex items-center">
