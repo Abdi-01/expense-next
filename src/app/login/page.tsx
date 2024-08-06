@@ -18,15 +18,20 @@ const LoginPage: React.FunctionComponent<ILoginPageProps> = (props) => {
 
   const onSubmit = async (): Promise<void> => {
     try {
-      const login = await apiCall.post("/auth/login", {
+      const { data } = await apiCall.post("/auth/login", {
         email: emailRef.current?.value,
         password: passwordRef.current?.value,
       });
 
-      toast(`Welcome ${login.data.result.email}`);
-      localStorage.setItem("auth", JSON.stringify(login.data.result));
-      setUser(login.data.result);
-      router.push("/");
+      console.log(data);
+
+      toast(`Welcome ${data.result.email}`);
+      // Menyimpan token pada localstorage
+      localStorage.setItem("auth", data.result.token);
+
+      // Menyimpan data email dan noTelp pada globalstate useContext
+      setUser({ email: data.result.email, noTelp: data.result.noTelp });
+      // router.push("/");
     } catch (error: any) {
       console.log(error);
       toast(error.response.data.error.message);
@@ -37,10 +42,10 @@ const LoginPage: React.FunctionComponent<ILoginPageProps> = (props) => {
     <div className="bg-slate-50 h-screen flex items-center">
       <div
         id="container"
-        className="w-4/12 bg-slate-100 m-auto shadow-lg rounded-md p-8"
+        className="w-96 bg-slate-100 m-auto shadow-lg rounded-md p-8"
       >
         <h1 className="w-full text-center font-semibold text-2xl">Login</h1>
-        <div className="h-96 flex flex-col justify-between mt-16 px-24">
+        <div className="h-96 flex flex-col justify-between mt-16 px-8">
           <div>
             <label className="block text-xl my-2">Email</label>
             <input
