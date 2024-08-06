@@ -31,7 +31,7 @@ const LoginPage: React.FunctionComponent<ILoginPageProps> = (props) => {
 
       // Menyimpan data email dan noTelp pada globalstate useContext
       setUser({ email: data.result.email, noTelp: data.result.noTelp });
-      // router.push("/");
+      router.push("/");
     } catch (error: any) {
       console.log(error);
       toast(error.response.data.error.message);
